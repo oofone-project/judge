@@ -9,16 +9,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
+	"github.com/oofone-project/judge/model"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
-
-type Submission struct {
-	Solution []byte `json:"solution"`
-	Runner   []byte `json:"runner"`
-	TestIn   []byte `json:"testin"`
-	TestOut  []byte `json:"testout"`
-	Id       string `json:"id"`
-}
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -26,26 +20,19 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func subFrom(solFile string, runFile string, testIn string, testOut string) Submission {
+func subFrom(solFile string, runFile string, testIn string, testOut string) model.Submission {
 	sol, err := os.ReadFile(solFile)
-	if err != nil {
-		log.Panic(err)
-	}
+	failOnError(err, "Could not open file")
 	run, err := os.ReadFile(runFile)
-	if err != nil {
-		log.Panic(err)
-	}
+	failOnError(err, "Could not open file")
 	testin, err := os.ReadFile(testIn)
-	if err != nil {
-		log.Panic(err)
-	}
+	failOnError(err, "Could not open file")
 	testout, err := os.ReadFile(testOut)
-	if err != nil {
-		log.Panic(err)
-	}
+	failOnError(err, "Could not open file")
+
 	id := uuid.New()
 
-	sub := Submission{
+	sub := model.Submission{
 		Solution: sol,
 		Runner:   run,
 		TestIn:   testin,
@@ -57,7 +44,9 @@ func subFrom(solFile string, runFile string, testIn string, testOut string) Subm
 }
 
 func main() {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	godotenv.Load(".env")
+
+	conn, err := amqp.Dial(os.Getenv("RABBIT_MQ_URI"))
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
@@ -66,19 +55,19 @@ func main() {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		os.Getenv("RABBIT_MQ_QUEUE"),
+		false, // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	sub := subFrom("./test/submission", "./test/runner", "./test/test.in", "./test/test.out")
+	sub := subFrom("./test/solution", "./test/runner", "./test/test.in", "./test/test.out")
 	body, err := json.Marshal(sub)
 	if err != nil {
 		log.Panic(err)
