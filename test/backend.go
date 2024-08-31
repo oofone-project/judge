@@ -1,5 +1,5 @@
 // Simulate the backend adding tasks to the queue
-package main
+package test
 
 import (
 	"context"
@@ -15,7 +15,67 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func subFrom(solFile string, runFile string, testIn string, testOut string) model.Submission {
+// sub := subFrom("./test/solution.txt", "./test/runner.txt", "./test/testin.txt", "./test/testout.txt")
+type Backend struct {
+	ctx     context.Context
+	cancel  context.CancelFunc
+	conn    *amqp.Connection
+	channel *amqp.Channel
+	queue   amqp.Queue
+}
+
+func NewBackend() Backend {
+	godotenv.Load(".env")
+
+	// TODO: use test broker instead, see https://github.com/marketplace/actions/rabbitmq-in-github-actions
+	conn, err := amqp.Dial(os.Getenv("RABBIT_MQ_URI"))
+	utils.FailOnError(err, "Could not open file")
+
+	ch, err := conn.Channel()
+	utils.FailOnError(err, "Could not open file")
+
+	q, err := ch.QueueDeclare(
+		os.Getenv("RABBIT_MQ_QUEUE"),
+		false, // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	utils.FailOnError(err, "Could not open file")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	return Backend{
+		ctx:     ctx,
+		cancel:  cancel,
+		conn:    conn,
+		channel: ch,
+		queue:   q,
+	}
+}
+
+func (b Backend) Publish(s *model.Submission) {
+	body, err := json.Marshal(s)
+	if err != nil {
+		utils.FailOnError(err, "Could not marshal submission")
+		return
+	}
+
+	err = b.channel.PublishWithContext(b.ctx,
+		"",           // exchange
+		b.queue.Name, // routing key
+		false,        // mandatory
+		false,
+		amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "application/json",
+			Body:         []byte(body),
+		})
+	utils.FailOnError(err, "Could not open file")
+	log.Printf(" [x] Sent %s", s.Id)
+}
+
+func subFrom(solFile string, runFile string, testIn string, testOut string) *model.Submission {
 	sol, err := os.ReadFile(solFile)
 	utils.FailOnError(err, "Could not open file")
 	run, err := os.ReadFile(runFile)
@@ -35,50 +95,11 @@ func subFrom(solFile string, runFile string, testIn string, testOut string) mode
 		Id:       id.String(),
 	}
 
-	return sub
+	return &sub
 }
 
-func main() {
-	godotenv.Load(".env")
-
-	conn, err := amqp.Dial(os.Getenv("RABBIT_MQ_URI"))
-	utils.FailOnError(err, "Could not open file")
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	utils.FailOnError(err, "Could not open file")
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		os.Getenv("RABBIT_MQ_QUEUE"),
-		false, // durable
-		false, // delete when unused
-		false, // exclusive
-		false, // no-wait
-		nil,   // arguments
-	)
-	utils.FailOnError(err, "Could not open file")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	sub := subFrom("./test/solution.txt", "./test/runner.txt", "./test/testin.txt", "./test/testout.txt")
-	body, err := json.Marshal(sub)
-	if err != nil {
-		log.Panic(err)
-		return
-	}
-
-	err = ch.PublishWithContext(ctx,
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,
-		amqp.Publishing{
-			DeliveryMode: amqp.Persistent,
-			ContentType:  "application/json",
-			Body:         []byte(body),
-		})
-	utils.FailOnError(err, "Could not open file")
-	log.Printf(" [x] Sent %s", sub.Id)
+func (b Backend) Close() {
+	b.conn.Close()
+	b.cancel()
+	b.channel.Close()
 }

@@ -1,4 +1,4 @@
-package consumer
+package tasks
 
 import (
 	"github.com/oofone-project/judge/model"
