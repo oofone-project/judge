@@ -15,7 +15,6 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-// sub := subFrom("./test/solution.txt", "./test/runner.txt", "./test/testin.txt", "./test/testout.txt")
 type Backend struct {
 	ctx     context.Context
 	cancel  context.CancelFunc
@@ -25,7 +24,7 @@ type Backend struct {
 }
 
 func NewBackend() Backend {
-	godotenv.Load(".env")
+	godotenv.Load("../.env")
 
 	// TODO: use test broker instead, see https://github.com/marketplace/actions/rabbitmq-in-github-actions
 	conn, err := amqp.Dial(os.Getenv("RABBIT_MQ_URI"))
@@ -75,7 +74,7 @@ func (b Backend) Publish(s *model.Submission) {
 	log.Printf(" [x] Sent %s", s.Id)
 }
 
-func subFrom(solFile string, runFile string, testIn string, testOut string) *model.Submission {
+func SubFrom(solFile string, runFile string, testIn string, testOut string) *model.Submission {
 	sol, err := os.ReadFile(solFile)
 	utils.FailOnError(err, "Could not open file")
 	run, err := os.ReadFile(runFile)
