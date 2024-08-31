@@ -11,10 +11,11 @@ import (
 )
 
 type TaskClient struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	queue   amqp.Queue
-	msgs    <-chan amqp.Delivery
+	conn     *amqp.Connection
+	channel  *amqp.Channel
+	queue    amqp.Queue
+	msgs     <-chan amqp.Delivery
+	delivery *amqp.Delivery
 }
 
 func NewTaskClient() (*TaskClient, error) {
@@ -53,7 +54,7 @@ func NewTaskClient() (*TaskClient, error) {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,  // auto-ack
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -73,19 +74,19 @@ func NewTaskClient() (*TaskClient, error) {
 	return &tc, nil
 }
 
-func (tc *TaskClient) Run() error {
+func (tc *TaskClient) Run(task chan Task) error {
 	go func() {
 		for d := range tc.msgs {
 			var sol model.Submission
 			err := json.Unmarshal(d.Body, &sol)
 			if err != nil {
+				// TODO: send error back and tell client something went wrong
 				log.Print(err)
 				continue
 			}
 
-			log.Print(string(sol.Solution))
-			log.Print(string(sol.Runner))
-			log.Print(string(sol.Id))
+			t := NewTask(&sol, &d)
+			task <- t
 		}
 	}()
 
