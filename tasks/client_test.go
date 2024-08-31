@@ -12,8 +12,9 @@ import (
 // TODO: multiple clients and concurrent tasks to test fair dispatch? need tasks that take time
 func TestRun(t *testing.T) {
 	b := test.NewBackend()
-	tc, err := tasks.NewTaskClient()
+	defer b.Close()
 
+	tc, err := tasks.NewTaskClient()
 	if err != nil {
 		utils.FailOnError(err, "Could not init task client")
 	}
