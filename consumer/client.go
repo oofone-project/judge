@@ -41,6 +41,15 @@ func NewTaskClient() (*TaskClient, error) {
 		return nil, err
 	}
 
+	err = ch.Qos(
+		1,     // prefetch count
+		0,     // prefetch size
+		false, // global
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer

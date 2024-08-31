@@ -11,24 +11,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/oofone-project/judge/model"
+	"github.com/oofone-project/judge/utils"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
-	}
-}
-
 func subFrom(solFile string, runFile string, testIn string, testOut string) model.Submission {
 	sol, err := os.ReadFile(solFile)
-	failOnError(err, "Could not open file")
+	utils.FailOnError(err, "Could not open file")
 	run, err := os.ReadFile(runFile)
-	failOnError(err, "Could not open file")
+	utils.FailOnError(err, "Could not open file")
 	testin, err := os.ReadFile(testIn)
-	failOnError(err, "Could not open file")
+	utils.FailOnError(err, "Could not open file")
 	testout, err := os.ReadFile(testOut)
-	failOnError(err, "Could not open file")
+	utils.FailOnError(err, "Could not open file")
 
 	id := uuid.New()
 
@@ -47,11 +42,11 @@ func main() {
 	godotenv.Load(".env")
 
 	conn, err := amqp.Dial(os.Getenv("RABBIT_MQ_URI"))
-	failOnError(err, "Failed to connect to RabbitMQ")
+	utils.FailOnError(err, "Could not open file")
 	defer conn.Close()
 
 	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
+	utils.FailOnError(err, "Could not open file")
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
@@ -62,12 +57,12 @@ func main() {
 		false, // no-wait
 		nil,   // arguments
 	)
-	failOnError(err, "Failed to declare a queue")
+	utils.FailOnError(err, "Could not open file")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	sub := subFrom("./test/solution", "./test/runner", "./test/test.in", "./test/test.out")
+	sub := subFrom("./test/solution.txt", "./test/runner.txt", "./test/testin.txt", "./test/testout.txt")
 	body, err := json.Marshal(sub)
 	if err != nil {
 		log.Panic(err)
@@ -84,6 +79,6 @@ func main() {
 			ContentType:  "application/json",
 			Body:         []byte(body),
 		})
-	failOnError(err, "Failed to publish a message")
+	utils.FailOnError(err, "Could not open file")
 	log.Printf(" [x] Sent %s", sub.Id)
 }
