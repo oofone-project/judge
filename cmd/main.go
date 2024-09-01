@@ -19,7 +19,7 @@ func main() {
 	defer tc.Close()
 
 	for t := range taskCh {
-		log.Printf("Running task %s in %s", t.GetSubmission().Id, t.GetSubmission().Language)
+		log.Printf("Running task %s in %s", t.GetSubmission().Id, t.GetSubmission().Language.Name)
 
 		err = t.TaskToJudge()
 		utils.FailOnError(err, "Unable to send task to judge")
