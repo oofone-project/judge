@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"github.com/oofone-project/judge/judges"
 	"github.com/oofone-project/judge/model"
 	"github.com/oofone-project/judge/utils"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -68,10 +69,10 @@ func (b Backend) Publish(s *model.Submission) {
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent,
 			ContentType:  "application/json",
-			Body:         []byte(body),
+			Body:         body,
 		})
-	utils.FailOnError(err, "Could not open file")
-	log.Printf(" [x] Sent %s", s.Id)
+	utils.FailOnError(err, "Could not publish submission task")
+	log.Printf(" [x] Sent %s to %s", s.Id, s.Language)
 }
 
 func SubFrom(solFile string, runFile string, testIn string, testOut string) *model.Submission {
@@ -87,6 +88,7 @@ func SubFrom(solFile string, runFile string, testIn string, testOut string) *mod
 	id := uuid.New()
 
 	sub := model.Submission{
+		Language: judges.Python,
 		Solution: sol,
 		Runner:   run,
 		TestIn:   testin,

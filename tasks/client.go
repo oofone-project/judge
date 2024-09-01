@@ -81,10 +81,11 @@ func (tc *TaskClient) Run(task chan Task) error {
 			err := json.Unmarshal(d.Body, &sol)
 			if err != nil {
 				// TODO: send error back and tell client something went wrong
-				log.Print(err)
+				log.Panic(err)
 				continue
 			}
 
+			log.Printf("Received new task %s in %s", sol.Id, sol.Language)
 			t := NewTask(&sol, &d)
 			task <- t
 		}

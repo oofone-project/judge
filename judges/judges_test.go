@@ -1,16 +1,17 @@
-package tasks_test
+package judges_test
 
 import (
+	"log"
 	"testing"
 
 	"github.com/oofone-project/judge/tasks"
 	"github.com/oofone-project/judge/test"
 	"github.com/oofone-project/judge/utils"
-	"github.com/stretchr/testify/assert"
+	// "github.com/stretchr/testify/assert"
 )
 
-// TODO: multiple clients and concurrent tasks to test fair dispatch? need tasks that take time
-func TestRun(t *testing.T) {
+// TODO: finish test - run gen_out, check if files created
+func TestJudge(t *testing.T) {
 	b := test.NewBackend()
 	defer b.Close()
 
@@ -27,8 +28,13 @@ func TestRun(t *testing.T) {
 	b.Publish(sub)
 
 	task := <-taskCh
-	task.Ack(false)
+	log.Printf("Running task %s in %s", task.GetSubmission().Id, task.GetSubmission().Language)
 
-	assert.Equal(t, task.GetSubmission().Id, sub.Id, "Task ids not equal")
-	assert.Equal(t, task.GetSubmission().Language, sub.Language, "Langs not equal")
+	err = task.TaskToJudge()
+	utils.FailOnError(err, "Unable to send task to judge")
+
+	err = task.GetSubmission().Language.RunJudge()
+	utils.FailOnError(err, "Unable to run judge")
+
+	task.Ack(false)
 }
