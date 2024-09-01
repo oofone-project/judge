@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/oofone-project/judge/judges"
 	"github.com/oofone-project/judge/tasks"
 	"github.com/oofone-project/judge/test"
 	"github.com/oofone-project/judge/utils"
@@ -14,6 +15,7 @@ import (
 
 // TODO: finish tests - run gen_out, check if files created
 func TestJudge(t *testing.T) {
+	judges.BASE_PATH = "."
 	b := test.NewBackend()
 	defer b.Close()
 
@@ -30,10 +32,10 @@ func TestJudge(t *testing.T) {
 	task := <-taskCh
 	fmt.Printf("Running task %s in %s", task.GetSubmission().Id, task.GetSubmission().Language.Name)
 
-	err = task.GetSubmission().Language.ResetJudge(".")
+	err = task.GetSubmission().Language.ResetJudge()
 	utils.FailOnError(err, "Unable to reset judge")
 
-	err = task.TaskToJudge(".")
+	err = task.TaskToJudge()
 	utils.FailOnError(err, "Unable to send task to judge")
 
 	task.Ack(false)

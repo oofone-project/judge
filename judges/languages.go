@@ -12,7 +12,7 @@ type Language struct {
 	Setup   SetupFunc
 }
 
-type SetupFunc func(string) error
+type SetupFunc func() error
 
 // TODO: use env variables instead of string literals for paths
 var (
@@ -20,13 +20,13 @@ var (
 		Name:    "python",
 		Ext:     "py",
 		Command: "python3 ./python/gen_out.py",
-		Setup: func(basePath string) error {
-			err := os.MkdirAll(basePath+"/python/submission", 0777)
+		Setup: func() error {
+			err := os.MkdirAll(BASE_PATH+"/python/submission", 0777)
 			if err != nil {
 				return err
 			}
 
-			f, err := os.Create(basePath + "/python/submission/__init__.py")
+			f, err := os.Create(BASE_PATH + "/python/submission/__init__.py")
 			if err != nil {
 				return err
 			}

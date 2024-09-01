@@ -5,6 +5,10 @@ import (
 	"os/exec"
 )
 
+var (
+	BASE_PATH = "./judges"
+)
+
 type Results struct{}
 
 // TODO: create submission/temp folder on run and delete on reset so it can be gitignored
@@ -16,9 +20,9 @@ func (l Language) RunJudge() error {
 	return nil
 }
 
-func (l Language) ResetJudge(basePath string) error {
+func (l Language) ResetJudge() error {
 	//err := os.Remove("./judges/" + l.Name + "/submission/" + filename)
-	err := os.RemoveAll(basePath + "/" + l.Name + "/submission/")
+	err := os.RemoveAll(BASE_PATH + "/" + l.Name + "/submission/")
 	return err
 }
 
