@@ -3,7 +3,6 @@ package tasks
 import (
 	"os"
 
-	"github.com/oofone-project/judge/judges"
 	"github.com/oofone-project/judge/model"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -28,11 +27,15 @@ func (t Task) Ack(multiple bool) {
 	t.delivery.Ack(multiple)
 }
 
-func (t Task) TaskToJudge() error {
-	submissionPath := "../judges/" + judges.Python.Name + "/submission/"
-	ext := judges.Python.Ext
+func (t Task) TaskToJudge(basePath string) error {
+	err := t.submission.Language.Setup(basePath)
+	if err != nil {
+		return err
+	}
+	submissionPath := "../judges/" + t.submission.Language.Name + "/submission/"
+	ext := t.submission.Language.Ext
 
-	err := writeTo(submissionPath+"testin.txt", t.submission.TestIn)
+	err = writeTo(submissionPath+"testin.txt", t.submission.TestIn)
 	if err != nil {
 		return err
 	}

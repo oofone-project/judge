@@ -1,7 +1,9 @@
 package judges_test
 
 import (
-	"log"
+	"errors"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/oofone-project/judge/tasks"
@@ -10,15 +12,13 @@ import (
 	// "github.com/stretchr/testify/assert"
 )
 
-// TODO: finish test - run gen_out, check if files created
+// TODO: finish tests - run gen_out, check if files created
 func TestJudge(t *testing.T) {
 	b := test.NewBackend()
 	defer b.Close()
 
 	tc, err := tasks.NewTaskClient()
-	if err != nil {
-		utils.FailOnError(err, "Could not init task client")
-	}
+	utils.FailOnError(err, "Could not init task client")
 
 	taskCh := make(chan tasks.Task)
 
@@ -28,13 +28,21 @@ func TestJudge(t *testing.T) {
 	b.Publish(sub)
 
 	task := <-taskCh
-	log.Printf("Running task %s in %s", task.GetSubmission().Id, task.GetSubmission().Language)
+	fmt.Printf("Running task %s in %s", task.GetSubmission().Id, task.GetSubmission().Language.Name)
+	err = task.GetSubmission().Language.ResetJudge()
+	utils.FailOnError(err, "Unable to reset judge")
 
-	err = task.TaskToJudge()
+	err = task.TaskToJudge(".")
 	utils.FailOnError(err, "Unable to send task to judge")
 
-	err = task.GetSubmission().Language.RunJudge()
-	utils.FailOnError(err, "Unable to run judge")
-
 	task.Ack(false)
+
+	_, err = os.Stat("./python/submission/solution.py")
+	if errors.Is(err, os.ErrNotExist) {
+		t.Error("Submission not created properly")
+	}
+
+	// Put this in a separate test?
+	// err = task.GetSubmission().Language.RunJudge()
+	// utils.FailOnError(err, "Unable to run judge")
 }

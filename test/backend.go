@@ -10,11 +10,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"github.com/oofone-project/judge/judges"
-	"github.com/oofone-project/judge/model"
 	"github.com/oofone-project/judge/utils"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+type ClientSubmission struct {
+	Language string `json:"language"`
+	Solution []byte `json:"solution"`
+	Runner   []byte `json:"runner"`
+	TestIn   []byte `json:"testin"`
+	TestOut  []byte `json:"testout"`
+	Id       string `json:"id"`
+}
 
 type Backend struct {
 	ctx     context.Context
@@ -54,7 +61,7 @@ func NewBackend() Backend {
 	}
 }
 
-func (b Backend) Publish(s *model.Submission) {
+func (b Backend) Publish(s *ClientSubmission) {
 	body, err := json.Marshal(s)
 	if err != nil {
 		utils.FailOnError(err, "Could not marshal submission")
@@ -75,7 +82,7 @@ func (b Backend) Publish(s *model.Submission) {
 	log.Printf(" [x] Sent %s to %s", s.Id, s.Language)
 }
 
-func SubFrom(solFile string, runFile string, testIn string, testOut string) *model.Submission {
+func SubFrom(solFile string, runFile string, testIn string, testOut string) *ClientSubmission {
 	sol, err := os.ReadFile(solFile)
 	utils.FailOnError(err, "Could not open file")
 	run, err := os.ReadFile(runFile)
@@ -87,8 +94,8 @@ func SubFrom(solFile string, runFile string, testIn string, testOut string) *mod
 
 	id := uuid.New()
 
-	sub := model.Submission{
-		Language: judges.Python,
+	sub := ClientSubmission{
+		Language: "python",
 		Solution: sol,
 		Runner:   run,
 		TestIn:   testin,

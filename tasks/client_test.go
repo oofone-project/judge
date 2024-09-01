@@ -3,6 +3,7 @@ package tasks_test
 import (
 	"testing"
 
+	"github.com/oofone-project/judge/judges"
 	"github.com/oofone-project/judge/tasks"
 	"github.com/oofone-project/judge/test"
 	"github.com/oofone-project/judge/utils"
@@ -30,5 +31,5 @@ func TestRun(t *testing.T) {
 	task.Ack(false)
 
 	assert.Equal(t, task.GetSubmission().Id, sub.Id, "Task ids not equal")
-	assert.Equal(t, task.GetSubmission().Language, sub.Language, "Langs not equal")
+	assert.Equal(t, task.GetSubmission().Language.Name, judges.Languages["python"].Name, "Langs not equal")
 }

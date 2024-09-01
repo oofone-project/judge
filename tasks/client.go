@@ -85,7 +85,7 @@ func (tc *TaskClient) Run(task chan Task) error {
 				continue
 			}
 
-			log.Printf("Received new task %s in %s", sol.Id, sol.Language)
+			log.Printf("Received new task %s in %s", sol.Id, sol.Language.Name)
 			t := NewTask(&sol, &d)
 			task <- t
 		}
