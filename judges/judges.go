@@ -16,17 +16,9 @@ func (l Language) RunJudge() error {
 	return nil
 }
 
-func (l Language) ResetJudge() error {
-	err := l.removeSubmission()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (l Language) removeSubmission() error {
+func (l Language) ResetJudge(basePath string) error {
 	//err := os.Remove("./judges/" + l.Name + "/submission/" + filename)
-	err := os.RemoveAll("./judges/" + l.Name + "/submission/")
+	err := os.RemoveAll(basePath + "/" + l.Name + "/submission/")
 	return err
 }
 

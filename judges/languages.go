@@ -19,7 +19,7 @@ var (
 	Python = Language{
 		Name:    "python",
 		Ext:     "py",
-		Command: "python3 ./judges/python/gen_out.py",
+		Command: "python3 ./python/gen_out.py",
 		Setup: func(basePath string) error {
 			err := os.MkdirAll(basePath+"/python/submission", 0777)
 			if err != nil {

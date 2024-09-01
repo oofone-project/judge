@@ -29,7 +29,8 @@ func TestJudge(t *testing.T) {
 
 	task := <-taskCh
 	fmt.Printf("Running task %s in %s", task.GetSubmission().Id, task.GetSubmission().Language.Name)
-	err = task.GetSubmission().Language.ResetJudge()
+
+	err = task.GetSubmission().Language.ResetJudge(".")
 	utils.FailOnError(err, "Unable to reset judge")
 
 	err = task.TaskToJudge(".")

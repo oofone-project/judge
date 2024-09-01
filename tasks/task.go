@@ -32,7 +32,7 @@ func (t Task) TaskToJudge(basePath string) error {
 	if err != nil {
 		return err
 	}
-	submissionPath := "../judges/" + t.submission.Language.Name + "/submission/"
+	submissionPath := basePath + "/" + t.submission.Language.Name + "/submission/"
 	ext := t.submission.Language.Ext
 
 	err = writeTo(submissionPath+"testin.txt", t.submission.TestIn)
