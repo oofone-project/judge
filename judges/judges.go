@@ -11,7 +11,6 @@ var (
 
 type Results struct{}
 
-// TODO: create submission/temp folder on run and delete on reset so it can be gitignored
 func (l Language) RunJudge() error {
 	_, err := exec.Command("echo Running judge...").Output()
 	if err != nil {

@@ -14,7 +14,6 @@ type Language struct {
 
 type SetupFunc func() error
 
-// TODO: use env variables instead of string literals for paths
 var (
 	Python = Language{
 		Name:    "python",
