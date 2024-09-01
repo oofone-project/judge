@@ -1,2 +1,5 @@
+from solution import solution
+
+
 def runner(input):
-	return input
+    return solution(input.strip())

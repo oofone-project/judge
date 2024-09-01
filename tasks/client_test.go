@@ -3,6 +3,7 @@ package tasks_test
 import (
 	"testing"
 
+	"github.com/oofone-project/judge/judges"
 	"github.com/oofone-project/judge/tasks"
 	"github.com/oofone-project/judge/test"
 	"github.com/oofone-project/judge/utils"
@@ -12,8 +13,9 @@ import (
 // TODO: multiple clients and concurrent tasks to test fair dispatch? need tasks that take time
 func TestRun(t *testing.T) {
 	b := test.NewBackend()
-	tc, err := tasks.NewTaskClient()
+	defer b.Close()
 
+	tc, err := tasks.NewTaskClient()
 	if err != nil {
 		utils.FailOnError(err, "Could not init task client")
 	}
@@ -26,5 +28,8 @@ func TestRun(t *testing.T) {
 	b.Publish(sub)
 
 	task := <-taskCh
+	task.Ack(false)
+
 	assert.Equal(t, task.GetSubmission().Id, sub.Id, "Task ids not equal")
+	assert.Equal(t, task.GetSubmission().Language.Name, judges.Languages["python"].Name, "Langs not equal")
 }

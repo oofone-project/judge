@@ -1,6 +1,9 @@
 package tasks
 
 import (
+	"os"
+
+	"github.com/oofone-project/judge/judges"
 	"github.com/oofone-project/judge/model"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -23,4 +26,47 @@ func (t Task) GetSubmission() *model.Submission {
 
 func (t Task) Ack(multiple bool) {
 	t.delivery.Ack(multiple)
+}
+
+func (t Task) TaskToJudge() error {
+	err := t.submission.Language.Setup()
+	if err != nil {
+		return err
+	}
+	submissionPath := judges.BASE_PATH + "/" + t.submission.Language.Name + "/submission/"
+	ext := t.submission.Language.Ext
+
+	err = writeTo(submissionPath+"testin.txt", t.submission.TestIn)
+	if err != nil {
+		return err
+	}
+	err = writeTo(submissionPath+"testout.txt", t.submission.TestOut)
+	if err != nil {
+		return err
+	}
+	err = writeTo(submissionPath+"solution."+ext, t.submission.Solution)
+	if err != nil {
+		return err
+	}
+	err = writeTo(submissionPath+"runner."+ext, t.submission.Runner)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func writeTo(filename string, input []byte) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if tempErr := f.Close(); tempErr != nil {
+			err = tempErr
+		}
+	}()
+
+	_, err = f.Write(input)
+	return err
 }
