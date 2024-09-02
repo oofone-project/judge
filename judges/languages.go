@@ -2,6 +2,7 @@ package judges
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 )
 
@@ -45,6 +46,12 @@ func (l *Language) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	*l = Languages[s]
+
+	temp, ok := Languages[s]
+	if !ok {
+		return errors.New("Language does not exist")
+	}
+
+	*l = temp
 	return nil
 }
