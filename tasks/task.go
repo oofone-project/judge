@@ -20,8 +20,8 @@ func NewTask(s *Submission, d *amqp.Delivery) *Task {
 }
 
 func (t *Task) Run() (*judges.Result, error) {
-	err := t.taskToLang()
 	defer t.submission.Language.Reset()
+	err := t.taskToLang()
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +43,7 @@ func (t *Task) Ack(multiple bool) {
 	t.delivery.Ack(multiple)
 }
 
+// TODO: use path package...
 func (t *Task) taskToLang() error {
 	err := t.submission.Language.Setup()
 	if err != nil {
@@ -51,19 +52,19 @@ func (t *Task) taskToLang() error {
 	submissionPath := t.GetSubmission().Language.SubPath()
 	ext := t.submission.Language.Ext
 
-	err = writeTo(submissionPath+"testin.txt", t.submission.TestIn)
+	err = writeTo(submissionPath+"/testin.txt", t.submission.TestIn)
 	if err != nil {
 		return err
 	}
-	err = writeTo(submissionPath+"testout.txt", t.submission.TestOut)
+	err = writeTo(submissionPath+"/testout.txt", t.submission.TestOut)
 	if err != nil {
 		return err
 	}
-	err = writeTo(submissionPath+"solution."+ext, t.submission.Solution)
+	err = writeTo(submissionPath+"/solution."+ext, t.submission.Solution)
 	if err != nil {
 		return err
 	}
-	err = writeTo(submissionPath+"runner."+ext, t.submission.Runner)
+	err = writeTo(submissionPath+"/runner."+ext, t.submission.Runner)
 	if err != nil {
 		return err
 	}

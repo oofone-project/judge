@@ -12,6 +12,7 @@ import (
 
 // TODO: multiple clients and concurrent tasks to test fair dispatch? need tasks that take time
 func TestClientRun(t *testing.T) {
+	langs.BASE_PATH = "../languages"
 	b := test.NewBackend()
 	defer b.Close()
 

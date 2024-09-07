@@ -30,6 +30,11 @@ func (l Language) Reset() error {
 	}
 
 	err = os.MkdirAll(l.SubPath(), 0777)
+	if err != nil {
+		return err
+	}
+
+	err = l.Setup()
 	return err
 }
 
