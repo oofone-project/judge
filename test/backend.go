@@ -36,10 +36,10 @@ func NewBackend() Backend {
 
 	// TODO: use test broker instead, see https://github.com/marketplace/actions/rabbitmq-in-github-actions
 	conn, err := amqp.Dial(os.Getenv("RABBIT_MQ_URI"))
-	utils.FailOnError(err, "Could not open file")
+	utils.FailOnError(err, "Could not connect to Rabbit")
 
 	ch, err := conn.Channel()
-	utils.FailOnError(err, "Could not open file")
+	utils.FailOnError(err, "Could not open channel")
 
 	q, err := ch.QueueDeclare(
 		os.Getenv("RABBIT_MQ_QUEUE"),
@@ -49,7 +49,7 @@ func NewBackend() Backend {
 		false, // no-wait
 		nil,   // arguments
 	)
-	utils.FailOnError(err, "Could not open file")
+	utils.FailOnError(err, "Could not open queue")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	return Backend{

@@ -1,30 +1,33 @@
 package judges
 
 import (
-	"os"
-	"os/exec"
+	"errors"
+
+	"github.com/oofone-project/judge/judges/langs"
 )
 
 var (
-	BASE_PATH = "./judges"
+	KillError = errors.New("failed to kill subprocess")
 )
 
-type Results struct{}
+type Judge struct {
+	Lang *langs.Language
+}
 
-func (l Language) RunJudge() error {
-	_, err := exec.Command("echo Running judge...").Output()
-	if err != nil {
-		return err
+func NewJudge(l *langs.Language) *Judge {
+	return &Judge{
+		Lang: l,
 	}
-	return nil
 }
 
-func (l Language) ResetJudge() error {
-	//err := os.Remove("./judges/" + l.Name + "/submission/" + filename)
-	err := os.RemoveAll(BASE_PATH + "/" + l.Name + "/submission/")
-	return err
+// Generate output from user solution
+// Collect stats like time to run, error code, memory
+func (j Judge) RunJudge() (string, error) {
+	return "", nil
 }
 
-func (l Language) Evaluate() (*Results, error) {
-	return &Results{}, nil
+// Grade solution output
+// Read stderr, stdout
+func (j Judge) Evaluate() (*Result, error) {
+	return &Result{}, nil
 }

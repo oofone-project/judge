@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/oofone-project/judge/model"
+	"github.com/oofone-project/judge/judges"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -16,6 +16,11 @@ type TaskClient struct {
 	queue    amqp.Queue
 	msgs     <-chan amqp.Delivery
 	delivery *amqp.Delivery
+}
+
+type ResultAndSubmission struct {
+	Submission *Submission
+	Result     *judges.Result
 }
 
 func NewTaskClient() (*TaskClient, error) {
@@ -74,20 +79,26 @@ func NewTaskClient() (*TaskClient, error) {
 	return &tc, nil
 }
 
-func (tc *TaskClient) Run(task chan Task) error {
+func (tc *TaskClient) Run(result chan *ResultAndSubmission) error {
 	go func() {
 		for d := range tc.msgs {
-			var sol model.Submission
-			err := json.Unmarshal(d.Body, &sol)
+			var sub Submission
+			err := json.Unmarshal(d.Body, &sub)
 			if err != nil {
 				// TODO: send error back and tell client something went wrong
 				log.Panic(err)
 				continue
 			}
 
-			log.Printf("Received new task %s in %s", sol.Id, sol.Language.Name)
-			t := NewTask(&sol, &d)
-			task <- t
+			log.Printf("Received new task %s in %s", sub.Id, sub.Language.Name)
+			t := NewTask(&sub, &d)
+
+			res, err := t.Run()
+			t.Ack(false)
+			result <- &ResultAndSubmission{
+				Submission: &sub,
+				Result:     res,
+			}
 		}
 	}()
 

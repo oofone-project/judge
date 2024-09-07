@@ -4,36 +4,51 @@ import (
 	"os"
 
 	"github.com/oofone-project/judge/judges"
-	"github.com/oofone-project/judge/model"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Task struct {
-	submission *model.Submission
+	submission *Submission
 	delivery   *amqp.Delivery
 }
 
-func NewTask(s *model.Submission, d *amqp.Delivery) Task {
-	return Task{
+func NewTask(s *Submission, d *amqp.Delivery) *Task {
+	return &Task{
 		submission: s,
 		delivery:   d,
 	}
 }
 
-func (t Task) GetSubmission() *model.Submission {
+func (t *Task) Run() (*judges.Result, error) {
+	err := t.taskToLang()
+	defer t.submission.Language.Reset()
+	if err != nil {
+		return nil, err
+	}
+
+	j := judges.NewJudge(t.submission.Language)
+	res, err := j.Evaluate()
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (t *Task) GetSubmission() *Submission {
 	return t.submission
 }
 
-func (t Task) Ack(multiple bool) {
+func (t *Task) Ack(multiple bool) {
 	t.delivery.Ack(multiple)
 }
 
-func (t Task) TaskToJudge() error {
+func (t *Task) taskToLang() error {
 	err := t.submission.Language.Setup()
 	if err != nil {
 		return err
 	}
-	submissionPath := judges.BASE_PATH + "/" + t.submission.Language.Name + "/submission/"
+	submissionPath := t.GetSubmission().Language.SubPath()
 	ext := t.submission.Language.Ext
 
 	err = writeTo(submissionPath+"testin.txt", t.submission.TestIn)
